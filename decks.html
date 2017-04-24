@@ -47,6 +47,219 @@
             integrity="sha256-gvQgAFzTH6trSrAWoH1iPo9Xc96QxSZ3feW6kem+O00="
             crossorigin="anonymous"></script>
     <script src="client.js"></script>
-    <script src="decks.js"></script>
+    <script>
+$(document).ready(function(){
+  $('#card-details').hide();
+  $('#deck-form').submit(function(e){
+    e.preventDefault();
+    addDeck();
+  });
+  $('#proxy').click(function(){
+    location = '/proxy?deckname=' + $('#deckname').val();
+  });
+  $('#delete-decks').submit(function(e){
+    e.preventDefault();
+    deleteDecks();
+  });
+  $('#delete').click(function(e) {
+    e.preventDefault();
+    deleteDeck();
+  });
+  getDecksJSON();
+  console.log('decks.js loaded');
+  $.getJSON("AllCards.json",
+    function( result ){
+      allCards = result;
+      var cardNames = Object.keys(allCards).sort();
+      var cardList = $('#card-list');
+      cardNames.forEach(function(cardName){
+        var layout = allCards[cardName].layout;
+        if (layout != 'token' & layout != 'scheme') {
+          cardList.append($('<div/>').text(cardName).addClass('card-name'));
+        }
+      });
+      // Left click on card name, add 1 instance to deck
+      $('.card-name').click(function(e) {
+        //console.log($(this) + 'was clicked');
+        var cards = $("#cards");
+        var before = cards.val();
+        var cardName = $(this).text();
+        if (before) {
+          var regex = cardLineRegex(cardName, 'm');
+          console.log(regex);
+          var existing = before.search(regex);
+          if (existing >= 0) {
+            var end = before.indexOf('\n', existing);
+            var match = before.match(regex);
+            console.log(match);
+            var count = match[2] || 1;
+            count++;
+            cards.val(before.substr(0, existing) + 
+                count + ' ' + cardName +
+                (end > 0 ? before.substr(end) : ''));
+          } else {
+            cards.val(before + '\n' + cardName);
+          }
+        } else {
+          cards.val(cardName);
+        }
+      });
+      // Right click, deletes 1 instance from deck
+      $('.card-name').contextmenu(function(e) {
+        e.preventDefault();
+        var cards = $("#cards");
+        var before = cards.val();
+        var cardName = $(this).text();
+        if (before) {
+          var regex = cardLineRegex(cardName, 'm');
+          var existing = before.search(regex);
+          if (existing >= 0) {
+            var end = before.indexOf('\n', existing);
+            var match = before.match(regex);
+            var count = match[2] || 1;
+            count--;
+            cards.val(before.substr(0, existing) + 
+                (count ? count + ' ' + cardName + (end > 0 ? '\n' : ''): '') +
+                (end > 0 ? before.substr(end + 1) : ''));
+          }
+        }
+      });
+      $('.card-name').mouseenter(function() {
+        var card = allCards[$(this).text()];
+        $('#card-details').show();
+        $('#card-name').text(card.name);
+        $('#card-mana-cost').text(card.manaCost);
+        $('#card-colors').text(card.colors);
+        $('#card-types').text(card.types || '');
+        $('#card-subtypes').text(card.subtypes || '');
+        $('#card-text').text(card.text || '');
+        $('#card-power').text(card.power || '');
+        $('#card-toughness').text(card.toughness || '');
+      });
+      $('.card-name').mouseleave(function() {
+        $('#card-details').hide();
+      });
+      
+      
+     // alert('loaded ' + Object.keys(allCards).length + ' cards');
+    });
+});
+
+
+function clearInputs() {
+  $('input').val("");
+  $('textarea').val("");
+}
+
+function getDecksJSON(){
+  console.log('getdecksJSON');
+  $.ajax({
+    method: "GET",
+    url: "/decks",
+    dataType: 'JSON'
+  }).success(function(data){
+    var json = JSON.stringify(data, null, '\t');
+    // console.log('getDecksJSON success ' + data + ' or ' + json);
+    listDecks(data);
+  });
+}
+
+function listDecks(decks) {
+  allDecks = [];
+  var deckList = $('#deck-list');
+  deckList.text('');
+  decks.forEach(function(deck) {
+    console.log('deckname=' + deck.deckname);
+    deckList.append($('<div/>').text(deck.deckname).addClass('deck-name'));
+    $('.deck-select').append($('<option/>').text(deck.deckname));
+    allDecks[deck.deckname] = deck;
+  });
+  $('.deck-name').click(function() {
+    console.log($(this).text());
+    var deck = allDecks[$(this).text()];
+    $('#deckname').val(deck.deckname);
+    var cardsList = $('#cards');
+    cardsList.val('');
+    //console.log(deck.cards);
+    for (var i = 0; i < deck.cards.length; ++i) {
+      // console.log(deck.cards[i].name);
+      cardsList.val((i ? cardsList.val() + '\n' : '') + deck.cards[i].count + ' ' + deck.cards[i].name);
+    }
+  });
+}
+
+var separators = [// MtGTop8 separators.
+    'LANDS', 'CREATURES', 'INSTANTS and SORC.', 'OTHER SPELLS', 'SIDEBOARD',
+    // Ignore wizards.com deck list separators.
+    'Creature (', 'Sorcery (', 'Instant (', 'Artifact (', 'Land (', 'Enchantment (',
+        'Tribal instant (', 'Planeswalker (', 'Cards'];
+
+function addDeck(){
+  if (!$("#cards").val()) {
+   return;
+  }
+  var deckname = $('#deckname').val();
+  if (!deckname) {
+   deckname = new Date().getTime();
+   $('#deckname').val(deckname);
+  }
+  var lines = $("#cards").val().trim().split('\n');
+  console.log('lines=' + lines);
+  var cards = [];
+  var regex = cardLineRegex();
+  for (var i = 0; i < lines.length; ++i) {
+    var match = lines[i].match(regex);
+    console.log(i + ':' + lines[i] + " = " + match);
+    if (match) {
+      var card = {count: parseInt(match[2]) || 1, name: match[3] };
+      for (var s = 0; s < separators.length; ++s) {
+        if (card.name.startsWith(separators[s])) {
+          break;
+        }
+      }
+      if (s < separators.length) {
+        continue;
+      }
+      if (allCards && !getCard(card.name)) {
+        alert(card.name + ' not found!');
+        return;
+      }
+      cards.push(card);
+    }
+  }
+  var deck = {deckname: deckname, cards: cards};
+  $.ajax({
+    method: "POST",
+    url: "/deck",
+    data: 'deckname='+$("#deckname").val()+'&cards='+JSON.stringify(cards),
+    dataType: 'JSON'
+  }).success(listDecks);
+}
+
+function deleteDeck(){
+ console.log('deleteDeck');
+  $.ajax({
+    method: "POST",
+    url: "/deck/delete",
+    data: 'deckname='+$("#deckname").val(),
+    dataType: 'JSON'
+  }).success(function(data){
+    listDecks(data);
+    clearInputs();
+  });
+}
+
+function deleteDecks(){
+ console.log('deleteDecks');
+  $.ajax({
+    method: "POST",
+    url: "/decks/delete",
+    dataType: 'JSON'
+  }).success(function(data) {
+    listDecks(data);
+    clearInputs();
+  });
+}
+    </script>
   </body>
 </html>
