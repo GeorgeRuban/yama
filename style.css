@@ -1,0 +1,178 @@
+/* styles */
+/* called by your view template */
+
+/* You might want to try something fancier: */
+/* less: http://lesscss.org/ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: helvetica, arial, sans-serif;
+  margin: 25px;
+}
+
+header {
+}
+
+h1 {
+  text-align: center;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+p {
+  max-width: 600px;
+}
+
+main {
+}
+
+form, .list-wrapper {
+  margin-bottom: 25px;
+  padding: 15px;
+  display: inline-block;
+  width: 100%;
+  max-width: 340px;
+  border-radius: 3px;
+  vertical-align: top;
+}
+
+textarea, .json-results-wrapper {
+  font-family: monospace;
+  border: 1px solid black;
+  display: block;
+  height: 30em;
+  margin: 1em 0;
+  font-size: 1em;
+  width: 100%;
+}
+
+.list-box,
+.json-results-wrapper {
+  border: 1px solid black;
+  display: block;
+  font-size: 1em;
+  height: 30em;
+  margin: 1em 0;
+  overflow: auto;
+  width: 100%;
+}
+
+#card-details {
+  border: 1px solid black;
+  position: absolute;
+  z-index: 10;
+}
+
+.list-box {
+  cursor: pointer;
+}
+
+input {
+  display: block;
+  margin-bottom: 10px;
+  padding: 5px;
+  width: 100%;
+  border: 1px solid black;
+  border-radius: 3px;
+  font-size: 16px;
+}
+
+button {
+  font-size: 16px;
+  border-radius: 3px;
+  background-color: lightgrey;
+  border: 1px solid grey;
+  box-shadow: 2px 2px teal;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: yellow;
+}
+
+button:active {
+  box-shadow: none;
+}
+
+li {
+  margin-bottom: 5px;
+}
+
+footer {
+  margin-top: 50px;
+  padding-top: 25px;
+  border-top: 1px solid lightgrey;
+}
+
+footer > a {
+  color: #BBBBBB;
+}
+
+.name, .life, .poison {
+  display: inline-block;
+}
+
+.board {
+  border: 1px solid grey;
+  display: inline-block;
+  /* Leave room for the game history */
+  width: calc(100% - 370px);
+}
+.battlefield, .battlefield div, .hand {
+  width: 100%;
+  min-height: 105px;
+}
+.redzone {
+  background-color: red;
+}
+.lands {
+  background-color: yellowgreen;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-around;
+}
+.stacks {
+  width: 100px;
+  display: inline-block;
+  border: 0;
+  padding: 0;
+}
+.stacks div {
+  width: 100px;
+  height: 105px;
+}
+.stacks img {
+  position: absolute;
+}
+.rows {
+  display: inline-block;
+  /* allow room for the stacks */
+  width: calc(100% - 110px);
+  vertical-align: top;
+}
+.library {
+  background-color: antiquewhite;
+}
+.graveyard {
+  background-color: slategrey;
+}
+.exile {
+  background-color: darkslategrey;
+}
+.tapped {
+  -ms-transform: rotate(90deg); /* IE 9 */
+  -webkit-transform: rotate(90deg); /* Chrome, Safari, Opera */
+  transform: rotate(90deg);
+}
+
+#card {
+  width: 230px;
+  height: 315px;
+}
